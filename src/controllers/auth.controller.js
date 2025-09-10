@@ -16,7 +16,9 @@ const router = express.Router();
 router.post('/register', [
   body('email').isEmail().withMessage('provide valid email'),
   body('password').isLength({ min: 6 }).withMessage('password min 6 chars'),
-  body('name').optional().isString()
+  body('name').optional().isString(),
+  body('role').optional().isIn(['user','admin'])
+
 ], async (req, res, next) => {
   try {
     const errors = validationResult(req);
