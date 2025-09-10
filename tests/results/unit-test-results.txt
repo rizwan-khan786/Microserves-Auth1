@@ -1,0 +1,21 @@
+
+> auth-service@1.0.0 test
+> jest
+
+  console.log
+    [dotenv@17.2.2] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [INFO] Connected to MongoDB
+
+      at Object.log [as info] (src/utils/logger.js:2:30)
+
+::ffff:127.0.0.1 - - [10/Sep/2025:02:13:43 +0000] "POST /api/v1/auth/register HTTP/1.1" 201 644 "-" "-"
+::ffff:127.0.0.1 - - [10/Sep/2025:02:13:43 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 54 "-" "-"
+::ffff:127.0.0.1 - - [10/Sep/2025:02:13:44 +0000] "POST /api/v1/auth/login HTTP/1.1" 200 456 "-" "-"
+::ffff:127.0.0.1 - - [10/Sep/2025:02:13:44 +0000] "POST /api/v1/auth/login HTTP/1.1" 401 49 "-" "-"
+::ffff:127.0.0.1 - - [10/Sep/2025:02:13:44 +0000] "POST /api/v1/auth/refresh HTTP/1.1" 200 456 "-" "-"
+::ffff:127.0.0.1 - - [10/Sep/2025:02:13:44 +0000] "GET /api/v1/auth/me HTTP/1.1" 200 204 "-" "-"
+::ffff:127.0.0.1 - - [10/Sep/2025:02:13:44 +0000] "GET /api/v1/auth/me HTTP/1.1" 401 54 "-" "-"
