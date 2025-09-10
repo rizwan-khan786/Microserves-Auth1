@@ -72,7 +72,7 @@ router.post('/login', [
     user.refreshTokens.push({ token: refreshToken });
     await user.save();
 
-    res.json({ success: true, data: { accessToken, refreshToken } });
+    res.json({ success: true, data: {user: user.toJSON(), accessToken, refreshToken } });
   } catch (err) {
     next(err);
   }
