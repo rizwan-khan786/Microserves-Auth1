@@ -25,7 +25,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.1",
     "morgan": "^1.10.1",
-    "nodemailer": "^7.0.6"
+    "nodemailer": "^7.0.6",
+    "serverless-http": "^4.0.0"
   },
   "devDependencies": {
     "supertest": "^7.1.4"

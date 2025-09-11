@@ -94,6 +94,91 @@ router.post('/login', [
   }
 });
 
+// /**
+//  * Refresh
+//  * POST /api/v1/auth/refresh
+//  * body: { refreshToken }
+//  */
+// router.post('/refresh', [
+//   body('refreshToken').exists()
+// ], async (req, res, next) => {
+//   try {
+//     const { refreshToken } = req.body;
+//     if (!refreshToken) return res.status(400).json({ success: false, message: 'refreshToken required' });
+
+//     // verify token
+//     let payload;
+//     try {
+//       payload = verifyRefresh(refreshToken);
+//     } catch (err) {
+//       return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+//     }
+
+//     const user = await User.findById(payload.id);
+//     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
+
+//     const found = user.refreshTokens.find(rt => rt.token === refreshToken);
+//     if (!found) {
+//       // token reuse/attack - clear all user's refresh tokens as precaution
+//       user.refreshTokens = [];
+//       await user.save();
+//       logger.warn('Refresh token reuse detected for user', user._id);
+//       return res.status(401).json({ success: false, message: 'Refresh token not recognized' });
+//     }
+
+//     // Optionally: rotate tokens (issue new refresh token and remove the old one)
+//     // For simplicity, remove old and add new
+//     user.refreshTokens = user.refreshTokens.filter(rt => rt.token !== refreshToken);
+//     const newRefresh = signRefresh({ id: user._id });
+//     user.refreshTokens.push({ token: newRefresh });
+//     await user.save();
+
+//     const accessToken = signAccess({ id: user._id, email: user.email, role: user.role });
+
+//     res.json({ success: true, data: { accessToken, refreshToken: newRefresh } });
+//   } catch (err) {
+//     next(err);
+//   }
+// });
+
+
+/**
+ * Login
+ * POST /api/v1/auth/login
+ * body: { email, password }
+ */
+router.post('/login', [
+  body('email').isEmail(),
+  body('password').exists()
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) 
+      return res.status(400).json({ success: false, errors: errors.array() });
+
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) 
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) 
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    // Always issue fresh tokens on login
+    const accessToken = signAccess({ id: user._id, email: user.email, role: user.role });
+    const refreshToken = signRefresh({ id: user._id });
+
+    // Replace refresh tokens with new one (avoid duplicates)
+    user.refreshTokens = [{ token: refreshToken }];
+    await user.save();
+
+    res.json({ success: true, data: { user: user.toJSON(), accessToken, refreshToken } });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /**
  * Refresh
  * POST /api/v1/auth/refresh
@@ -104,9 +189,9 @@ router.post('/refresh', [
 ], async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(400).json({ success: false, message: 'refreshToken required' });
+    if (!refreshToken) 
+      return res.status(400).json({ success: false, message: 'refreshToken required' });
 
-    // verify token
     let payload;
     try {
       payload = verifyRefresh(refreshToken);
@@ -115,27 +200,18 @@ router.post('/refresh', [
     }
 
     const user = await User.findById(payload.id);
-    if (!user) return res.status(401).json({ success: false, message: 'User not found' });
+    if (!user) 
+      return res.status(401).json({ success: false, message: 'User not found' });
 
     const found = user.refreshTokens.find(rt => rt.token === refreshToken);
     if (!found) {
-      // token reuse/attack - clear all user's refresh tokens as precaution
-      user.refreshTokens = [];
-      await user.save();
-      logger.warn('Refresh token reuse detected for user', user._id);
       return res.status(401).json({ success: false, message: 'Refresh token not recognized' });
     }
 
-    // Optionally: rotate tokens (issue new refresh token and remove the old one)
-    // For simplicity, remove old and add new
-    user.refreshTokens = user.refreshTokens.filter(rt => rt.token !== refreshToken);
-    const newRefresh = signRefresh({ id: user._id });
-    user.refreshTokens.push({ token: newRefresh });
-    await user.save();
-
+    // Do NOT remove/rotate token — just issue new access token
     const accessToken = signAccess({ id: user._id, email: user.email, role: user.role });
 
-    res.json({ success: true, data: { accessToken, refreshToken: newRefresh } });
+    res.json({ success: true, data: { accessToken, refreshToken } });
   } catch (err) {
     next(err);
   }

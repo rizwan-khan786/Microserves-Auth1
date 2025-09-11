@@ -8,7 +8,7 @@ const app = require('../../src/app');
 let server;
 let accessToken;
 let refreshToken;
-
+~
 beforeAll(async () => {
   // start server on a random free port
   server = app.listen(0);

@@ -1,0 +1,16 @@
+service: auth-service
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+  environment:
+    MONGO_URI: "mongodb+srv://rizwanikhan63:root@cluster0.n0mstat.mongodb.net/authdb?retryWrites=true&w=majority&appName=Cluster0"
+    RATE_LIMIT_WINDOW_MS: ${env:RATE_LIMIT_WINDOW_MS, "60000"}
+    RATE_LIMIT_MAX: ${env:RATE_LIMIT_MAX, "100"}
+
+functions:
+  app:
+    handler: handler.handler
+    events:
+      - httpApi: "*"
